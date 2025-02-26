@@ -82,7 +82,7 @@ Discover and assess the application's PostgreSQL/MySQL/Oracle databases
 * You have successfully setup relication for the DB and are ready to do a failover to your Azure VM.
 
 ### Learning resources
-* Link to https://learn.microsoft.com/en-us/azure/....
+* [Oracle sizing on Azure IaaS](https://github.com/Azure/Oracle-Workloads-for-Azure/blob/main/levelup-oracle-on-iaas/lab1/readme.md)
 
 ### Solution - Spoilerwarning
 

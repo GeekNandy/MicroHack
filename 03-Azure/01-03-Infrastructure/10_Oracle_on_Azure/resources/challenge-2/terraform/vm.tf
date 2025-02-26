@@ -53,6 +53,20 @@ resource "azurerm_network_security_group" "nsg" {
   }
 }
 
+resource "azurerm_network_security_rule" "oracle_port" {
+  resource_group_name         = azurerm_resource_group.rg.name
+  name                        = "AllowOraclePort"
+  priority                    = 1002
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "1521"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  network_security_group_name = azurerm_network_security_group.nsg.name
+}
+
 resource "azurerm_network_interface" "nic" {
   name                = local.nic_name
   location            = azurerm_resource_group.rg.location

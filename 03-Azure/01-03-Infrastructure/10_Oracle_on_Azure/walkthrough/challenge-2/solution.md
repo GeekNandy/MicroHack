@@ -63,7 +63,7 @@ Required input parameters:
       caching   = "None"
     }
 
-🔑 **Note: The objective of this challenge is to learn how to use the most cost efficient SKU combination for compute and disks. Therefore, you should not go with the provided default values for vm_size and data_disk, but use the most cost efficient SKUs which will fullfil your performance requirements!**
+🔑 ***Note:** The objective of this challenge is to learn how to use the most cost efficient SKU combination for compute and disks. Therefore, you should not go with the provided default values for vm_size and data_disk, but use the most cost efficient SKUs which will fullfil your performance requirements!**
 
 Here are the detailed steps for the deployment:
 
@@ -188,7 +188,7 @@ Verify the deployment plan or adjust parameter values in case you encounter erro
 ```bash
 terraform apply tfplan
 ```
-Wait for the resources to get created. This may take several minutes. Then, go to the Azure portal and navigate to your VM. Find the public IP address of the VM and copy it for use in the next task.
+Wait for the resources to get created. This takes - including the post installation script - approx. 10min. When the deployment finished, note the public IP address of the VM and copy it for use in the next task.
 
 ### **Task 3: Configure Oracle DB single instance via Ansible**
 
@@ -204,60 +204,99 @@ Open the inventory file and replace the \<Public IP address of Azure vm created 
 ```bash
 ansible-playbook -i ./inventory playbook.yml
 ```
-The ansible playbook will configure the guest OS of the created VM, download and install oracle 19c binaries.
+The ansible playbook will configure the guest OS of the created VM and download and install oracle 19c binaries. There will be no instance/database created.
+This will be done manually via RMAN RESTORE.
 
-TODO: Measure duration without dbca script
-
-**Note: The creation of the database takes pretty long, so the ansible playbook takes ~45min to execute. We recommend to continue with another challenge to use the microhack time most effectively.** 
+🔑 ***Note:** The ansible playbook takes ~10min to finish.** 
 
 ### Task 4: Backup onprem database and restore it on Azure VM using RMAN
 
-Connect to the primary onprem Oracle VM and check if there are backups we can use. 
+🔑 ***HINT:** In this task you need to work on the primary vm and the target vm via ssh sessions. It's recommended to open an ssh shell for each vm and keep both open to easily switch between the two vms.*
 
-If this is not the case initiate backup.
+In order to connect to the vm-primary-0 we first need to open the ssh port. 
+- In the Azure portal navigate to the vm
+- Expand section "Networking" and click Network settings
+- Click Create port rule button and select inbound port rule
+- In Service dropdown list choose SSH
+- In priority text box enter 100
+- Click Add button
 
-Copy the backup files to the target VM in Azure.
+We also need to have connectivity via Oracle port 1521, so repeat the steps above to create another inbound port rule, but give it priority 101.
 
-Login to target VM in Azure, create required folders, make required changes in files and restore database from backup files.
+🔑 ***Note:** Do not open these ports in your production environment to the internet. Rather use private network connectivity and open ports only to required client ip addresses!*
 
-### Task 5: Setup dataguard to sync source database to the newly created Azure VM 
+Connect to the **primary onprem Oracle vm**. 
 
-Connect to the VM you created
 ```bash
-ssh -i ~/.ssh/oracle_vm_rsa_id adminuser@<replace-with-your-public-ip>
-su oracle
+ssh -i ~/.ssh/mh-oracle-data-guard oracle@<replace-with-vm-primary-puplic-ip>
 
-# check whether ORACLE_HOME and ORACLE_SID have been set correctly
-echo $ORACLE_HOME
-echo $ORACLE_SID
+# open tnsnames.ora
+vim $ORACLE_HOME/network/admin/tnsnames.ora
 ```
-If prompted for passphrase/password type those and confirm with enter.
-
-Create/update the file $ORACLE_HOME/network/admin/tnsnames.ora with your favorite editor - i.e. vim. Because DNS resolution has not been set up in the microhack environment use the public IP address of your primary host instead of the host name.
-```bash
-ORCL =
+Append the following tns entry to the file:
+```
+ORCL_stby =
   (DESCRIPTION =
     (ADDRESS_LIST =
-      (ADDRESS = (PROTOCOL = TCP)(HOST = <replace-with-public-ip-of-primary-host>)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = TCP)(HOST = <replace-w-ora-vm-public-ip>)(PORT = 1521))
     )
     (CONNECT_DATA =
       (SID = ORCL)
     )
   )
- 
-ORCLDG2 =
+```
+Start the listener:
+```bash
+lsnrctl stop 
+lsnrctl start
+```
+
+Connect to the **ora-vm in Azure**:
+
+```bash
+ssh -i ~/.ssh/mh-oracle-data-guard oracle@<replace-with-ora-vm-public-ip>
+
+# check whether all oracle environment vars have been created correctly via ansible
+echo $ORACLE_HOME  
+/u01/app/oracle/product/19.3.0/dbhome_1
+echo $ORACLE_BASE 
+/u01/app/oracle
+echo $ORACLE_SID 
+ORCL
+
+mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/pdbseed
+mkdir -p $ORACLE_BASE/oradata/$ORACLE_SID/pdb1
+mkdir -p $ORACLE_BASE/oradata/fra
+mkdir -p $ORACLE_BASE/admin/$ORACLE_SID/adump
+mkdir -p $ORACLE_BASE/fast_recovery_area/$ORACLE_SID
+```
+
+Edit or create the tnsnames.ora file, which is in the $ORACLE_HOME/network/admin folder.
+
+```
+ORCL =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = <replace-w-primary-onpre-vm-public-ip>)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SID = ORCL)
+    )
+  )
+ORCL_stby =
   (DESCRIPTION =
     (ADDRESS_LIST =
       (ADDRESS = (PROTOCOL = TCP)(HOST = ora-vm)(PORT = 1521))
     )
     (CONNECT_DATA =
-      (SID = ORCLDG2)
+      (SID = ORCL)
     )
   )
 ```
 
-Create/update the file $ORACLE_HOME/network/admin/listener.ora with your favorite editor - i.e. vim. Verify that your host is called 'ora-vm' or change the value here accordingly. The same is valid for ORACLE_HOME. 
-```bash
+Edit or create the listener.ora file, which is in the $ORACLE_HOME/network/admin folder.
+
+```
 LISTENER =
   (DESCRIPTION_LIST =
     (DESCRIPTION =
@@ -268,23 +307,101 @@ LISTENER =
 SID_LIST_LISTENER =
   (SID_LIST =
     (SID_DESC =
-      (GLOBAL_DBNAME = ORCLDG2)
-      (ORACLE_HOME = /u01/app/oracle/product/19.3.0/dbhome_1)
-      (SID_NAME = ORCLDG2)
+      (GLOBAL_DBNAME = ORCL_DG22    (ORACLE_HOME = /u01/app/oracle/product/19.0.0/dbhome_1)
+      (SID_NAME = ORCL)
     )
   )
 ```
-
-Restart the listener:
+Start the listener:
 ```bash
 lsnrctl stop
 lsnrctl start
 ```
 
-### Task 5 (optional): Set the database hosted in Azure as the new primary 
+Create the parameter file /tmp/initORCL_stby.ora with the following contents:
+```bash
+*.db_name='ORCL'
+```
+
+Create a password file:
+```bash
+$ orapwd file=$ORACLE_HOME/dbs/orapwORCL password=Oracle123.? entries=10 force=y
+```
+(Alternatively, you copy it using scp from primary to ora-vm)
+
+Start the database on ora-vm:
+```bash
+sqlplus / as sysdba
+SQL> CREATE spfile from pfile;
+SQL> STARTUP NOMOUNT PFILE='/tmp/initORCL_stby.ora';
+SQL> EXIT;
+```
+
+Restore the database by using the Oracle Recovery Manager (RMAN) tool:
+```bash
+rman TARGET sys/Oracle123.?@ORCL AUXILIARY sys/Oracle123.?@ORCL_stby
+```
+🔑 ***HINT:** In order for this command to work, tnsnames.ora must match on primary and ora-vm and both machines require inbound port 1521 connectivity.*
+
+Run the following commands in RMAN:
+```
+DUPLICATE TARGET DATABASE
+  FOR STANDBY
+  FROM ACTIVE DATABASE
+  DORECOVER
+  SPFILE
+    SET db_unique_name='ORCL_stby' COMMENT 'Is standby'
+  NOFILENAMECHECK;
+```
+Messages similar to the following ones appear when the commands are completed:
+```
+media recovery complete, elapsed time: 00:00:00
+Finished recover at 29-JUN-22
+Finished Duplicate Db at 29-JUN-22
+```
+
+### Task 5: Configure dataguard on primary vm (onprem)
+
+🔑 ***Please note:** At the time of writing, this task could not be verified. It's still under development. There might be missing steps.*
+
+Enable Data Guard Broker:
+```bash
+sqlplus / as sysdba
+```
+```
+SQL> ALTER SYSTEM SET dg_broker_start=true;
+SQL> CREATE pfile FROM spfile;
+SQL> EXIT;
+```
+
+Start Data Guard Manager and sign in by using SYS and a password. (Don't use OS authentication.)
+
+```bash
+$ dgmgrl sys/Oracle123.?@ORCL
+```
+```
+CREATE CONFIGURATION my_dg_config AS PRIMARY DATABASE IS ORCL CONNECT IDENTIFIER IS ORCL;
+```
+```
+ADD DATABASE ORCL_stby AS CONNECT IDENTIFIER IS ORCL_stby MAINTAINED AS PHYSICAL;
+```
+```
+ENABLE CONFIGURATION;
+```
+Review the configuration:
+```
+DGMGRL> SHOW CONFIGURATION;
+Configuration - my_dg_config
+  Protection Mode: MaxPerformance
+  Members:
+  ORCL      - Primary database
+  ORCL_stby - Physical standby database
+Fast-Start Failover: DISABLED
+Configuration Status:
+SUCCESS   (status updated 26 seconds ago)
+```
 
 
-
-You successfully completed challenge 2! 🚀🚀🚀
+**You successfully completed challenge 2!** 🚀🚀🚀
 
  **[Home](../../Readme.md)** - [Next Challenge Solution](../challenge-3/solution.md)

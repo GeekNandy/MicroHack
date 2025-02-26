@@ -24,23 +24,23 @@
   #   args:
   #     chdir: "{{ oracle_db_home }}"
 
-  - name: Configure Oratab
-    shell: sed -i 's/:N/:Y/' /etc/oratab
-    become: true
-    become_user: root
+  # - name: Configure Oratab
+  #   shell: sed -i 's/:N/:Y/' /etc/oratab
+  #   become: true
+  #   become_user: root
    
   # - name: copy response file for silent install
   #   template: src=dbora.j2 dest=/etc/init.d/dbora
   #   become: true
   #   become_user: root
 
-  - name: Chnage ownership of dbora
-    file:
-      path: /etc/init.d/dbora
-      group: dba
-      mode: 0750
-    become: true
-    become_user: root
+  # - name: Chnage ownership of dbora
+  #   file:
+  #     path: /etc/init.d/dbora
+  #     group: dba
+  #     mode: 0750
+  #   become: true
+  #   become_user: root
   
   - name: link files
     command: ln -s /etc/init.d/dbora {{ item }}
@@ -57,9 +57,10 @@
 
 
 ############### not sure if and where to put this ################
-- name: start listener
-  when: data_guard == "no" or inventory_hostname in groups['ora-x1']
-  command: lsnrctl start
-  ignore_errors: true
-  become: true
-  become_user: "{{ oracle_user }}"
+# - name: start listener
+#   when: data_guard == "no" or inventory_hostname in groups['ora-x1']
+#   command: lsnrctl start
+#   ignore_errors: true
+#   become: true
+#   become_user: "{{ oracle_user }}"
+#   tags: start-listener
