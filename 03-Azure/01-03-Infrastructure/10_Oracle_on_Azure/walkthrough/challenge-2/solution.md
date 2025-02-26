@@ -9,7 +9,7 @@ Duration: 45 minutes
   - [Terraform](https://developer.hashicorp.com/terraform/install) 
   - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt)
   - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html#installing-ansible-on-ubuntu)
-  - The AWR files in html format generated in challenge 1
+- The AWR files in html format generated in challenge 1
 
 ### **Task 1: Determine the most cost efficient SKUs for compute and storage**
 
