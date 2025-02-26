@@ -18,7 +18,7 @@ Duration: 45 minutes
 
 
 🔑 **Key to a successful strategy....**
-- Use this tool to analyze AWR/STATSPACK reports and generate recommendation for compute and storage SKUs to match your performance requirements.
+- Use [this tool](https://github.com/Azure/Oracle-Workloads-for-Azure/tree/main/levelup-oracle-on-iaas/lab1) to analyze AWR/STATSPACK reports and generate recommendation for compute and storage SKUs to match your performance requirements.
 
 ### **Task 2: Deploy the Azure VM**
 
