@@ -70,15 +70,15 @@ Here are the detailed steps for the deployment:
 TODO: rework to use keys from Keyvault provided by environment setup
 
 ```bash
-ssh-keygen -f ~/.ssh/oracle_vm_rsa_id
+ssh-keygen -f ~/.ssh/mh-oracle-data-guard
 ``` 
 If successfully created, there should be now to new files in your home directories .ssh subfolder:
 
 ```bash
 ls -la ~/.ssh/
 
--rw-------  1 <username> 2655 Jan 15 14:52 oracle_vm_rsa_id
--rw-r--r--  1 <username>  574 Jan 15 14:52 oracle_vm_rsa_id.pub
+-rw-------  1 <username> 2655 Jan 15 14:52 mh-oracle-data-guard
+-rw-r--r--  1 <username>  574 Jan 15 14:52 mh-oracle-data-guard.pub
 ``` 
 
 2. Clone the repository if not done already to the system you are using your shell and change directory to the folder where you have cloned the terraform files for challenge 1. Validate that you are in the correct folder. The output of ls -la should look like this.
