@@ -9,18 +9,16 @@ Duration: 20 minutes
   - [Terraform](https://developer.hashicorp.com/terraform/install) 
   - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt)
   - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/installation_distros.html#installing-ansible-on-ubuntu)
+  - The AWR files in html format generated in challenge 1
 
 ### **Task 1: Determine the most cost efficient SKUs for compute and storage**
 
-💡 The first....
+💡 Task 1 is still work in progress....
 
-💥 **Here are the first three general steps that are typically happen:** 
-1. Everybody struggles with finding the right person....
-2. If somebody finds the plan, the first three actions...
-3. Do not sress to much we have a...
+
 
 🔑 **Key to a successful strategy....**
-- The key to success is not a technical consideration of....
+- Use this tool to analyze AWR/STATSPACK reports and generate recommendation for compute and storage SKUs to match your performance requirements.
 
 ### **Task 2: Deploy the Azure VM**
 
