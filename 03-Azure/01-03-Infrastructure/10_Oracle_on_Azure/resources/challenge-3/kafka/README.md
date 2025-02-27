@@ -5,15 +5,17 @@ https://docs.confluent.io/kafka-connectors/oracle-cdc/current/prereqs-validation
 
 All required files should be already uploaded on the used VM servers under directory
 
+__for the following example please change the responsible directory or add the path to the commands__
+
 /challenge3
     /kafka
         /connectors
         /plugins
     /docker-compose
     /oracle
-        /xe11grel2
-        /xe21c
-    /docker
+        /11g (express edition)
+        /21c (express edition)
+    /ora2pg
         /config
         /data
 
@@ -57,12 +59,8 @@ docker-compose up --build -d 'service_name'
 ## Step 2:
 Configure the Oracle database 
 
-For old Oracle release utl_file_dir can be used in newer release directory replaced utl_file_dir
 
-### a. SET the utl_file_dir parameter:
-
-
-connect to the oracle docker container:
+### a. Connect to the oracle docker container:
 ~~~bash
 docker exec -it oracle-xe1 bash
 
@@ -71,17 +69,20 @@ su - oracle
 mkdir -p /u01/app/oracle/admin/dpdump
 chmod 755 /u01/app/oracle/admin/dpdump
 
-Change the path for the 21c Express Edition
+## The path for the 21c Express Edition needs to be adopted
 /opt/oracle/oradata/admin/ppdump
+~~~
 
 
+### b. Create database user which will be used for the challenge 3
+~~~bash
 sqlplus / as sysdba
 
 CREATE USER demo_schema IDENTIFIED BY "password";
 GRANT CONNECT, RESOURCE TO demo_schema;
 ~~~
 
-### Create database schema - see orcl_setup01_oracle_schema.sql
+### c. Create database schema - see orcl_setup01_oracle_schema.sql
 
 If the datbase schema DEMO_SCHEMA is already created you can skip the step f and continue with step 3!
 Execute initial data load
@@ -105,6 +106,11 @@ SELECT count(*) FROM DEMO_SCHEMA.EMPLOYEES;
 Create demo table for testing purposes. See [ Demo table for Kafak setup ](./testtableforkafka.md)
 
 
+For old Oracle release utl_file_dir can be used in newer release directory replaced utl_file_dir
+
+### a. SET the utl_file_dir parameter if database is 11g:
+
+~~~bash
 ALTER SYSTEM SET utl_file_dir = '/u01/app/oracle/admin/dpdump' SCOPE=SPFILE;
 
 
@@ -114,7 +120,7 @@ STARTUP
 
 --------------------------------------------------------------------------------
     
-Do not execute the following code snippet for Oracle datbase > 11g instead continue directly with (B) the creation of a directory (go to b.)
+Do not execute the following code snippet does not need to be considered in the challegen instead continue directly with (B) the creation of a directory (go to b.)
     SQL> declare
     file_open utl_file.file_type;
     begin
@@ -137,7 +143,21 @@ Do not execute the following code snippet for Oracle datbase > 11g instead conti
 ### b. Use Directory instead of utl_file_dir if possible
 
 ~~~bash
+## for oracle database 11g for example
 show parameter utl_file_dir;
+~~~
+
+__Query and create directory for logminer
+~~~bash
+SET LINESIZE 150
+COLUMN owner FORMAT A20
+COLUMN directory_name FORMAT A25
+COLUMN directory_path FORMAT A80
+
+SELECT *
+FROM   dba_directories
+ORDER BY owner, directory_name;
+
 
 CREATE OR REPLACE DIRECTORY logminer_dir AS '/u01/app/oracle/admin/dpdump';
 
@@ -158,9 +178,7 @@ EXECUTE DBMS_LOGMNR_D.BUILD('dictioniary.ora', 'LOGMINER_DIR');
 ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 
 --- if newer oracle databases are used!!! In our case for an 11g Rel.2 not required.
-ALTER SYSTEM SET ENABLE_GOLDENGATE_REPLICATION=TRUE SCOPE=BOTH;
-ALTER SYSTEM SET ENABLE_LOGMINING=TRUE SCOPE=BOTH;
-    
+ALTER SYSTEM SET ENABLE_GOLDENGATE_REPLICATION=TRUE SCOPE=BOTH;    
       
 ALTER SYSTEM SWITCH LOGFILE;
 ~~~
@@ -209,6 +227,8 @@ log_archive_dest_16                  string
 log_archive_dest_17                  string
 log_archive_dest_18                  string
 log_archive_dest_19                  string
+    
+
     
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_1 = 'LOCATION=USE_DB_RECOVERY_FILE_DEST' scope=both;
     
@@ -495,6 +515,8 @@ b. Create a producer to send a test message
 
 Write in the producer the message: My first Kafka message!
 
+My first KAFKA Topic!
+
 ~~~
 
 c. open a new terminal/cmd and log into the kafka container 
@@ -519,11 +541,14 @@ kafka-topics --delete --topic test-topic --bootstrap-server broker:9092
 
 a. For later purpose potentially required 
 ~~~bash
-kafka-topics --delete --topic schema-changes-oracle --bootstrap-server broker:9092
+kafka-topics --delete --topic test-topic --bootstrap-server broker:9092
 ~~~
 
 b. set the retention time of a topic
- ~~~bash   
+ ~~~bash  
+
+## Not required in the demo
+
 kafka-configs.sh --alter --entity-type topics --entity-name schema-changes.oracle --add-config retention.ms=1000 --bootstrap-server localhost:9092
 ~~~
 

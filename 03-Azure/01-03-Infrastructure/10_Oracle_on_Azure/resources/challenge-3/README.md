@@ -4,6 +4,8 @@
 
 For the following exercises we will use a container based environment with the following containers.
 
+__vmware 1 with a debian 12 - bookworm__
+
 1.  Zookeeper      (because Zookeeper is EOL, you can also be replaced by using KRAFT)
 2.  Kafka          - Broker (Confluentic or Debezium version)
 3.  Kafka          - Connect (Confluentic or Debezium version)
@@ -14,6 +16,18 @@ For the following exercises we will use a container based environment with the f
 8.  PostgreSQL     - Version 17
 9.  PGAdmin        - Administration UI for PostgreSQL
 10. ORA2PG         - Migration tool for Oracle 2 PostgreSQL migrations
+
+
+__vmware 2 with a window system as a jumpbox for web UI / c/s deployment__
+
+1. Windows 11 or server
+2. SQLDeveloper
+3. Browser for web access
+   1. Confluent Control Center
+   2. KAFDROP (an alternative KAFKA UI)
+   3. PGADMIN
+
+
 
 
 Migration can be done in mainly 2 flavors:

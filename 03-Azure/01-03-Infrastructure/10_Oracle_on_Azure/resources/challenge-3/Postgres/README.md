@@ -24,16 +24,52 @@ WHERE table_schema = 'demo_schema'
 SELECT count(*) FROM "demo_schema"."ADDRESSES";
 ~~~
 
+__Create the table if required__
+~~~bash
+CREATE TABLE addresses (
+    address_id SERIAL PRIMARY KEY,
+    street VARCHAR(100),
+    city VARCHAR(50),
+    state VARCHAR(50),
+    zip_code VARCHAR(10)
+);
+~~~
+
 6. Enablen of requested Extensions in PostgreSQL Flexible Server
  
    1. Enable the extension in the serverparameter of the PGFS and save the settings.
 
    2. Create the extension in the database where you want to use it.
-   create extension oracle_fdw;
-   create extension orafce;
-   create extension plpgsql;
-   create extension 
+   __create extension oracle_fdw;__
+   __create extension orafce;__
+   __create extension plpgsql;__
 
+   Following a short explanation of the used extensions in PostgreSQL
+
+__oracle_fdw__
+The oracle_fdw (Foreign Data Wrapper) extension allows PostgreSQL to access data stored in Oracle databases. It enables you to create foreign tables in PostgreSQL that map to tables in an Oracle database, allowing you to query and manipulate Oracle data as if it were part of your PostgreSQL database.
+
+Key Features:
+Allows PostgreSQL to query Oracle tables.
+Supports SELECT, INSERT, UPDATE, and DELETE operations on Oracle tables.
+Enables integration between PostgreSQL and Oracle databases.
+
+__orafce__
+The orafce (Oracle Functions Compatibility Extension) extension provides a set of functions and packages that are compatible with Oracle's PL/SQL. It helps in migrating applications from Oracle to PostgreSQL by providing Oracle-compatible functions, packages, and data types.
+
+Key Features:
+Provides Oracle-compatible functions and packages.
+Eases the migration of applications from Oracle to PostgreSQL.
+Includes functions like DECODE, NVL, GREATEST, LEAST, and many others.
+
+__plpgsql__
+The plpgsql (Procedural Language/PostgreSQL) extension is the default procedural language for PostgreSQL. It allows you to write stored procedures, functions, and triggers using a syntax similar to Oracle's PL/SQL.
+
+Key Features:
+
+Enables the creation of stored procedures, functions, and triggers.
+Provides control structures like loops, conditionals, and exception handling.
+Supports complex business logic and data manipulation within the database.
 
 
 # How to query remote date between Oracle and Azure PGFS
@@ -50,6 +86,8 @@ DROP FOREIGN TABLE oracle_table;
 
 
 2. Connect via SQLPlus on the oracle database and create in our case a small demo table for the test case.
+
+__The following table creation can be skipped if the addressess table will be used!__
 ~~~bash
 ## Create the oracle_table
 

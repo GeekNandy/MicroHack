@@ -5,6 +5,6 @@
   become_method: sudo
 
   roles:
-  - common     # common OS configuration tasks # TODO: add privatekey file for oracle user
+  - common     # common OS configuration tasks 
   - oracle19c  # oracle software installation/configuration
   - dbca       # database/instance creation #TODO: rename as we are not creating a database here

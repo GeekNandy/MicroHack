@@ -30,3 +30,16 @@ alien sqldeveloper-24.3.1-347.1826.noarch.rpm
 docker run -it --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix oracle-xe-sqldeveloper
 
 
+If SQLDeveloper current version 24 will be used against outdated database like 11g Rel2 the following error might happen:
+
+~~~bash
+java.sql.SQLException: ORA-00604: error occurred at recursive SQL level 1 ORA-01882: timezone region not found
+~~~
+
+In a plain a SQL-Developer installation under Windows go to directory C:\Program Files\sqldeveloper\sqldeveloper\bin and add
+~~~bash
+AddVMOption -Duser.timezone=CET
+~~~
+to file sqldeveloper.conf.
+
+
