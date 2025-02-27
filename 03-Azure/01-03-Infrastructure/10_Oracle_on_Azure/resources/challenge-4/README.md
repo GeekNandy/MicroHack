@@ -105,3 +105,46 @@ Follow the instruction at the two following links to create the ODAA and migrate
 
 > Goal: Migrate the database to ODAA with Zero Downtime Migration from Oracle.
 > NOTE: This task is optional and will not be graded.
+
+## Solution
+
+~~~powershell
+az login --use-device-code
+$subName="build"
+az account set -s $subName
+$rgName="rg-mh-oracle-1"
+$zdmVmName="zdm2"
+$zdmVMId=az vm show -g $rgName -n $zdmVmName --query id -o tsv
+$bastionName=az network bastion list -g $rgName --query "[0].name" -o tsv
+az network bastion ssh --name $bastionName -g $rgName --target-resource-id $zdmVMId --auth-type password --username chpinoto
+demo!pass123
+~~~
+
+### Inside the zdm VM
+
+~~~bash
+# Verify the running Oracle Linux version
+cat /etc/os-release # Minimum OS version Oracle Linux 7
+
+# Install sqlplus
+wget https://download.oracle.com/otn_software/linux/instantclient/2370000/oracle-instantclient-basic-23.7.0.25.01-1.el8.x86_64.rpm
+sudo rpm -ivh oracle-instantclient-basic-23.7.0.25.01-1.el8.x86_64.
+wget https://download.oracle.com/otn_software/linux/instantclient/2370000/oracle-instantclient-sqlplus-23.7.0.25.01-1.el8.x86_64.rpm
+sudo rpm -ivh oracle-instantclient-sqlplus-23.7.0.25.01-1.el8.x86_64.rpm
+# verify if sqlplus has been installed
+sqlplus -v
+
+# create tnsnames.ora config file
+echo "odaa2=(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1521)(host=vvtqclsd.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g74e1d79d80e6af_odaa2_low.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))" | tnsnames.ora
+cat tnsnames.ora
+
+# verify if the FQDN does use a public IP
+dig vvtqclsd.adb.eu-frankfurt-1.oraclecloud.com
+mkdir -p /usr/lib/oracle/23/client64/lib/network/admin
+sudo cp tnsnames.ora /usr/lib/oracle/23/client64/lib/network/admin
+cat /usr/lib/oracle/23/client64/lib/network/admin/tnsnames.ora
+
+# connect to ODAA
+sqlplus admin@odaa2
+LunaLevis502
+~~~
